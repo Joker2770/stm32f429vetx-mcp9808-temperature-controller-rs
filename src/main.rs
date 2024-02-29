@@ -23,7 +23,10 @@ use stm32f4xx_hal::{
 
 use nb::block;
 
-const TEMP_SETTING: f32 = 45.0;
+const TEMP_SETTING_1: f32 = 45.0;
+const TEMP_SETTING_2: f32 = 45.0;
+const MAX_TEMP_1: f32 = 60.0;
+const MAX_TEMP_2: f32 = 60.0;
 
 #[allow(clippy::empty_loop)]
 #[entry]
@@ -71,8 +74,11 @@ fn main() -> ! {
     );
 
     /* pwm generation ch1 and ch2 with tim2 */
-    let channels = (Channel1::new(gpioa.pa0), Channel2::new(gpioa.pa1));
-    let pwm = dp.TIM2.pwm_hz(channels, 20.kHz(), &clocks).split();
+    let channels = (
+        Channel1::new(gpioa.pa0.internal_pull_up(true)),
+        Channel2::new(gpioa.pa1.internal_pull_up(true)),
+    );
+    let pwm = dp.TIM2.pwm_hz(channels, 1.kHz(), &clocks).split();
     let (mut ch1, mut ch2) = pwm;
     ch1.set_duty_cycle_percent(0).unwrap();
     ch1.set_polarity(Polarity::ActiveLow);
@@ -82,15 +88,15 @@ fn main() -> ! {
     ch2.enable();
 
     /* pid ctrl */
-    let mut pid_1 = Pid::new(TEMP_SETTING, 100.0);
-    pid_1.p(21.8, 100.0);
-    pid_1.i(0.1, 50.0);
-    pid_1.d(0.08, 10.0);
+    let mut pid_1 = Pid::new(TEMP_SETTING_1, 100.0);
+    pid_1.p(11.5, 100.0);
+    pid_1.i(0.13, 50.0);
+    pid_1.d(0.1, 10.0);
 
-    let mut pid_2 = Pid::new(TEMP_SETTING, 100.0);
-    pid_2.p(21.5, 100.0);
-    pid_2.i(0.1, 50.0);
-    pid_2.d(0.05, 10.0);
+    let mut pid_2 = Pid::new(TEMP_SETTING_2, 100.0);
+    pid_2.p(11.5, 100.0);
+    pid_2.i(0.13, 50.0);
+    pid_2.d(0.1, 10.0);
 
     let mut delay = dp.TIM1.delay_ms(&clocks);
     loop {
@@ -99,9 +105,9 @@ fn main() -> ! {
         let mut mcp9808 = MCP9808::new(
             i2c,
             SlaveAddress::Alternative {
-                a2: false,
-                a1: false,
-                a0: false,
+                a2: true,
+                a1: true,
+                a0: true,
             },
         );
 
@@ -127,9 +133,9 @@ fn main() -> ! {
         mcp9808 = MCP9808::new(
             i2c,
             SlaveAddress::Alternative {
-                a2: true,
-                a1: true,
-                a0: true,
+                a2: false,
+                a1: false,
+                a0: false,
             },
         );
 
@@ -161,7 +167,7 @@ fn main() -> ! {
 
         // F
         let pid_f = pid_1.next_control_output(temp_1);
-        if pid_f.output > 0.0 && pid_f.output <= 100.0 {
+        if pid_f.output > 0.0 && pid_f.output <= 100.0 && temp_1 < MAX_TEMP_1 {
             ch1.set_duty_cycle_percent(pid_f.output as u8).unwrap();
             rprintln!("[pid_f]: {:.4}", pid_f.output);
         } else {
@@ -171,7 +177,7 @@ fn main() -> ! {
 
         // X
         let pid_x = pid_2.next_control_output(temp_2);
-        if pid_x.output > 0.0 && pid_x.output <= 100.0 {
+        if pid_x.output > 0.0 && pid_x.output <= 100.0 && temp_2 < MAX_TEMP_2 {
             ch2.set_duty_cycle_percent(pid_x.output as u8).unwrap();
             rprintln!("[pid_x]: {:.4}", pid_x.output);
         } else {

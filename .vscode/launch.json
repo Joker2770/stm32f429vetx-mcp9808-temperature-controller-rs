@@ -12,7 +12,7 @@
             "coreConfigs": [
                 {
                     //!MODIFY
-                    "programBinary": ".\\target\\thumbv7em-none-eabihf\\release\\stm32f429vetx-mcp9808-temperature-test-rs",
+                    "programBinary": ".\\target\\thumbv7em-none-eabihf\\release\\stm32f429vetx-mcp9808-temperature-controller-rs",
                     "coreIndex": 0,
                     // "svdFile": "stm32f429.svd.patched",
                     "rttEnabled": true,

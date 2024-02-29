@@ -1,5 +1,5 @@
 [package]
-name = "stm32f429vetx-mcp9808-temperature-test-rs"
+name = "stm32f429vetx-mcp9808-temperature-controller-rs"
 version = "0.1.0"
 authors = ["Joker2770 <1214220480@qq.com>"]
 edition = "2021"
