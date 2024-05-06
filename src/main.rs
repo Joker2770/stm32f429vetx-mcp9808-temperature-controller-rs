@@ -103,13 +103,10 @@ fn main() -> ! {
         ////////////////////////////////////////////////////////////////////////////////////
         // begin 1
         let mut mcp9808 = MCP9808::new(
-            i2c,
-            SlaveAddress::Alternative {
-                a2: true,
-                a1: true,
-                a0: true,
-            },
+            i2c
         );
+
+        mcp9808.set_address(SlaveAddress::Alternative { a2: true, a1: true, a0: true });
 
         // to read & write register
         let mut conf = mcp9808.read_configuration().unwrap();
@@ -131,13 +128,10 @@ fn main() -> ! {
 
         // begin 2
         mcp9808 = MCP9808::new(
-            i2c,
-            SlaveAddress::Alternative {
-                a2: false,
-                a1: false,
-                a0: false,
-            },
+            i2c
         );
+
+        mcp9808.set_address(SlaveAddress::Alternative { a2: false, a1: false, a0: false });
 
         // to read & write register
         conf = mcp9808.read_configuration().unwrap();
