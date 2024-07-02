@@ -64,7 +64,7 @@ fn main() -> ! {
     //     &clocks,
     // );
 
-    let mut i2c = stm32f4xx_hal::i2c::I2c::new(
+    let i2c = stm32f4xx_hal::i2c::I2c::new(
         dp.I2C1,
         (scl, sda),
         Mode::Standard {
@@ -98,18 +98,17 @@ fn main() -> ! {
     pid_2.i(0.13, 50.0);
     pid_2.d(0.1, 10.0);
 
+    let mut mcp9808 = MCP9808::new(i2c);
+
     let mut delay = dp.TIM1.delay_ms(&clocks);
     loop {
         ////////////////////////////////////////////////////////////////////////////////////
         // begin 1
-        let mut mcp9808 = MCP9808::new(
-            i2c,
-            SlaveAddress::Alternative {
-                a2: true,
-                a1: true,
-                a0: true,
-            },
-        );
+        mcp9808.set_address(SlaveAddress::Alternative {
+            a2: true,
+            a1: true,
+            a0: true,
+        });
 
         // to read & write register
         let mut conf = mcp9808.read_configuration().unwrap();
@@ -124,20 +123,15 @@ fn main() -> ! {
             .get_celsius(ResolutionVal::Deg_0_0625C);
         rprintln!("->temp_1: {:.4}", temp_1);
 
-        i2c = mcp9808.free();
-
         // writeln!(tx, "temp: {}", temp_1).unwrap();
         // end 1
 
         // begin 2
-        mcp9808 = MCP9808::new(
-            i2c,
-            SlaveAddress::Alternative {
-                a2: false,
-                a1: false,
-                a0: false,
-            },
-        );
+        mcp9808.set_address(SlaveAddress::Alternative {
+            a2: false,
+            a1: false,
+            a0: false,
+        });
 
         // to read & write register
         conf = mcp9808.read_configuration().unwrap();
@@ -151,8 +145,6 @@ fn main() -> ! {
             .unwrap()
             .get_celsius(ResolutionVal::Deg_0_0625C);
         rprintln!("->temp_2: {:.4}", temp_2);
-
-        i2c = mcp9808.free();
 
         // writeln!(tx, "temp_2: {}", temp_2).unwrap();
         // end 2
